@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Api service
+  node-service:
+    build: ./node-service        
+    container_name: node-service
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq
+    ports:
+      - "3000:3000"              
+    depends_on:
+      - rabbitmq
+
+  # Python Consumer service
+  python-consumer:
+    build: ./python-consumer      
+    container_name: python-consumer
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      RABBITMQ_URL: amqp://rabbitmq
+    depends_on:
+      - rabbitmq
+      - mongo
+
+  # MongoDB service
+  mongo:
+    image: mongo:latest           
+    container_name: mongo
+    ports:
+      - "27017:27017"             
+    volumes:
+      - mongo_data:/data/db 
+
+  # RabbitMQ service
+  rabbitmq:
+    image: rabbitmq:3-management  # Use RabbitMQ with management plugin
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"               # Expose RabbitMQ on default AMQP port
+      - "15672:15672"             # Expose RabbitMQ Management UI on port 15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+volumes:
+  mongo_data:                     # Volume for MongoDB data persistence
